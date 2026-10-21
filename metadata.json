@@ -1,0 +1,6 @@
+{
+  "name": "SFEC AI Live Chat",
+  "description": "Premium educational AI live chat and admission guidance platform for Bangladeshi students by SFEC — Shadat Fatih Education Consultant.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

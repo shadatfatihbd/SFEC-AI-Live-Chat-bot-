@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>SFEC AI Live Chat — Redirecting...</title>
+    <script type="text/javascript">
+      // Single Page Application redirect script for GitHub Pages
+      // Encodes path and query string into a query parameter ?p=... so index.html can restore the route
+      var pathSegmentsToKeep = 0;
+      var l = window.location;
+      var repoPath = l.pathname.slice(1).split('/')[0];
+      // If deployed on github.io/<repo>/, preserve the repo segment
+      if (l.hostname.endsWith('github.io') && repoPath) {
+        pathSegmentsToKeep = 1;
+      }
+      l.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?p=/' +
+        l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+        (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+        l.hash
+      );
+    </script>
+  </head>
+  <body>
+    <p>Redirecting to SFEC AI Live Chat...</p>
+  </body>
+</html>
