@@ -80,20 +80,38 @@ https://script.google.com/macros/s/AKfycbzpku5s-873D9Mblresqd15o0Cjhr1oJM5609UdE
 - `action: "aiReply"`: Payload `{ conversationId, visitorId }`.
 - `action: "closeConversation"`: Closes the current session.
 
-### 🌐 CORS & Browser Communication Design
-Google Apps Script does not respond to browser preflight HTTP `OPTIONS` requests. To avoid browser CORS preflight blocks, the frontend API service (`src/services/gasApi.ts`) transmits POST requests with:
-```http
-Content-Type: text/plain;charset=utf-8
-```
-This qualifies the fetch as a "simple request" in browser standards. Google Apps Script still reads the request body via `e.postData.contents`, parses the JSON object, and successfully returns the result following standard redirect chains (`302 Found` → `script.googleusercontent.com` with `Access-Control-Allow-Origin: *`).
-
-### ⚠️ Backend Response Characteristics & Limitations
-- **Gemini API Key**: Securely maintained in Apps Script Script Properties (`GEMINI_API_KEY`). It is never exposed in client code.
-- **AI Service Availability**: When the Apps Script Gemini quota is exhausted or undergoing maintenance, `aiReply` returns:
-  ```json
-  {"success": false, "error": "AI service is temporarily unavailable. Please try again."}
+### 🌐 Backend Integration Architecture
+- The frontend connects directly to the Apps Script endpoint using standard JSON requests (`Content-Type: application/json`):
   ```
-  The frontend handles this transparently: it displays the real status, offers a retry action, and provides an immediate one-click bridge to **Shadat Fatih Education Consultant Facebook Messenger**.
+  POST /exec with action, conversationId, visitorId, and message.
+  ```
+- The complete, production-ready Apps Script backend code is provided in `google-apps-script/Code.gs`.
+
+### 🔍 Root Cause of "AI service is temporarily unavailable" & Fix
+1. **Model Deprecation / 404s**:
+   Legacy models (e.g. `gemini-pro`, `gemini-1.0-pro`, `gemini-1.5-flash`, `gemini-2.0-flash`) have been deprecated or decommissioned in 2026, causing Gemini API calls to return HTTP 404.
+   *Fix*: `Code.gs` uses active 2026 models (`gemini-flash-lite-latest`, `gemini-3.5-flash-lite`, and `gemini-3.8-flash`).
+2. **Search Grounding Quota (HTTP 429)**:
+   Calling `tools: [{ googleSearch: {} }]` on standard/free tier API keys often triggers `429 Quota Exceeded`.
+   *Fix*: `Code.gs` implements an automatic graceful fallback. If search grounding returns HTTP 429 or 400, it immediately generates the educational response without grounding rather than failing the request.
+3. **Missing `muteHttpExceptions: true`**:
+   Without `muteHttpExceptions: true` in `UrlFetchApp.fetch()`, Google Apps Script throws a runtime JavaScript exception on any non-2xx status code. This forced execution into the generic `catch` block that produced the `"AI service is temporarily unavailable"` message.
+   *Fix*: `Code.gs` enables `muteHttpExceptions: true`, inspects HTTP status codes, and sanitizes logs.
+
+### 🛠️ How to Deploy / Update Google Apps Script
+1. Open your Google Spreadsheet (with tabs `Conversations`, `Messages`, `Settings`).
+2. Click **Extensions** $\rightarrow$ **Apps Script**.
+3. Replace the existing content of `Code.gs` with the complete code from `google-apps-script/Code.gs`.
+4. Go to **Project Settings** (gear icon) $\rightarrow$ **Script Properties**:
+   - Ensure property `GEMINI_API_KEY` is set to your active Google Gemini API key.
+5. Click **Deploy** $\rightarrow$ **Manage deployments**:
+   - Click the **Edit** icon (pencil) next to your active deployment.
+   - Set **Version** to **New version**.
+   - Ensure **Execute as** is set to **Me** and **Who has access** is set to **Anyone**.
+   - Click **Deploy**.
+6. Verify health & diagnostics:
+   - Health check: `GET <web-app-url>?action=health`
+   - Safe diagnostics: `GET <web-app-url>?action=diag`
 
 ---
 

@@ -194,7 +194,8 @@ export const ChatPage: React.FC = () => {
     setLastError(null);
 
     try {
-      const aiRes = await requestAiReply(conversationId, visitorId);
+      const lastVisitorMsg = [...messages].reverse().find((m) => m.sender === 'visitor');
+      const aiRes = await requestAiReply(conversationId, visitorId, lastVisitorMsg?.message);
       if (aiRes.success && aiRes.message) {
         setMessages((prev) => [...prev, aiRes.message!]);
       } else {
@@ -276,7 +277,7 @@ export const ChatPage: React.FC = () => {
       );
 
       // Step 5: Call aiReply to trigger real backend Gemini reply
-      const aiRes = await requestAiReply(activeId, visitorId);
+      const aiRes = await requestAiReply(activeId, visitorId, content);
 
       // Step 6: Handle real backend response
       if (aiRes.success && aiRes.message) {

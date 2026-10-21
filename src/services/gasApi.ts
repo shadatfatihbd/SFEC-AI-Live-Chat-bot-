@@ -110,7 +110,7 @@ async function postToGas<T>(payload: Record<string, unknown>): Promise<T> {
   const response = await fetch(url, {
     method: 'POST',
     headers: {
-      'Content-Type': 'text/plain;charset=utf-8',
+      'Content-Type': 'application/json',
     },
     body: bodyString,
     redirect: 'follow',
@@ -205,12 +205,14 @@ export async function sendMessage(
  */
 export async function requestAiReply(
   conversationId: string,
-  visitorId: string
+  visitorId: string,
+  message?: string
 ): Promise<AiReplyResponse> {
   return await postToGas<AiReplyResponse>({
     action: 'aiReply',
     conversationId,
     visitorId,
+    ...(message ? { message: message.trim() } : {}),
   });
 }
 
